@@ -1,3 +1,6 @@
+// Andrei Parvu
+// 341C3
+
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/module.h>
@@ -33,6 +36,7 @@ MODULE_LICENSE("GPL");
 #define TRUE 1
 #define FALSE 0
 
+// CB structure
 struct e100_cb {
 	__le16 status;
 	__le16 cmd;
@@ -49,6 +53,7 @@ struct e100_cb {
 	struct e100_cb *next, *prev;
 };
 
+// Data for the driver
 struct e100_data {
 	struct e100_cb *tx_cbl[MAX_CBS];
 	struct e100_cb *rx_cbl[MAX_CBS];
@@ -63,29 +68,25 @@ struct e100_data {
 
 };
 
+// Set a command to the command unit
 void set_cmd(unsigned long base, unsigned short value, int no_wait) {
 	int i;
 
 	for (i = 0; i < 20000; i++) {
 		unsigned char v = inw(base);
 
-		// Astept sa se reseteze registrul - am inteles ca asa face el
-		// ack la o comanda :)
+		// Wait for an empty register - it finished processing the last
+		// command
 		if (!v || no_wait) {
-			//printk(LOG_LEVEL "cmd succes %d %d\n", i, value);
-			//mdelay(3000);
-
 			outw(value, base);
 
 			break;
 		}
 
-		if (i > 20)
+		if (i > 20) {
 			udelay(5);
+		}
 	}
-
-	if (i == 20000)
-		printk(LOG_LEVEL "Error!!!!\n");
 }
 
 irqreturn_t e100_irq(int irq_no, void *dev_id)
@@ -93,9 +94,10 @@ irqreturn_t e100_irq(int irq_no, void *dev_id)
 	struct e100_data *data = (struct e100_data*)dev_id;
 	struct sk_buff *skb;
 
-	printk(LOG_LEVEL "Nasol %d %d\n", data->cur_rx_cb->status,
-			data->cur_rx_cb->tcb_byte_count);
+	//printk(LOG_LEVEL "Nasol %d %d\n", data->cur_rx_cb->status,
+	//		data->cur_rx_cb->tcb_byte_count);
 
+	// Alloc a new skb structure
 	skb = dev_alloc_skb(data->cur_rx_cb->tcb_byte_count + 2);
 
 	memcpy(skb_put(skb, data->cur_rx_cb->tcb_byte_count),
@@ -119,6 +121,8 @@ int e100_open(struct net_device *net_dev)
 {
 	struct e100_data *data = netdev_priv(net_dev);
 	int ret;
+
+	return 0;
 
 	printk(LOG_LEVEL "in open");
 	net_dev->base_addr = data->pdev->resource[1].start;
@@ -146,6 +150,8 @@ int e100_open(struct net_device *net_dev)
 netdev_tx_t e100_start_xmit(struct sk_buff *skb, struct net_device *net_dev)
 {
 	struct e100_data *data = netdev_priv(net_dev);
+
+	return 0;
 
 	printk(LOG_LEVEL "sk buff de dimensiune %d\n", skb->len);
 
@@ -275,6 +281,9 @@ void e100_remove(struct pci_dev *dev)
 
 	free_cbl(data->tx_cbl, dev);
 	free_cbl(data->rx_cbl, dev);
+
+	unregister_netdev(net_dev);
+	free_netdev(net_dev);
 }
 
 struct pci_device_id e100_id_table[] = {
@@ -296,7 +305,7 @@ struct pci_driver e100_driver = {
 
 static int e100_init(void)
 {
-	int ret = pci_register_driver(&e100_driver);
+	//int ret = pci_register_driver(&e100_driver);
 
 	printk(LOG_LEVEL "%d\n", ret);
 
@@ -305,7 +314,7 @@ static int e100_init(void)
 
 static void e100_exit(void)
 {
-	pci_unregister_driver(&e100_driver);
+	//pci_unregister_driver(&e100_driver);
 }
 
 module_init(e100_init);
