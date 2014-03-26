@@ -1,0 +1,30 @@
+Andrei Parvu
+
+Ixia challenge
+
+
+Am implementat driverul folosind metoda simplificata de transmisie.
+
+Am alocat doua dma ringuri, unul pentru send si altul pentru receive.
+Functia de send este sincronizata, pentru a modifica atomic cb-ul curent
+si a il trimite mai departe.
+
+Repecetia o fac in handler-ul de intrerupere, trimitand pachetul
+primit in sus catre sistemul de operare folosind functia netif_rx().
+
+Am intaminat aceeasi problema ca ceilalti in privinta metodei simplificate,
+aceea ca pachetele trimise se primesc la destinatie cu toate datele setate
+pe 0. Nu am reusit sa fac sa ruleze o masina qemu compilata din surse
+(din cauza sdl-ului, dar nu e prea clar de ce), iar din cauza lipsei
+de timp nu am mai implementat metoda nesimplificata :)
+
+Dupa cum am postat si pe lista de discutii, la a doua incarcare a modulului,
+si asignarea unei adrese ip, obtin un kernel panic provenit de la functia
+dev_get_phys_port_id. Nu am reusit sa-mi dau seama de unde vine aceasta
+eroare, asa ca nu am avut cum sa o repar :(
+
+
+Chiar daca driverul scris de mine nu e cine stie ce si nu functioneaza
+in totalitate, cred ca a fost un exercitiu bun :)
+
+
