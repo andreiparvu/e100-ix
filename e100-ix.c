@@ -20,7 +20,7 @@ MODULE_LICENSE("GPL");
 
 #define LOG_LEVEL KERN_ALERT
 
-#define MAX_CBS 32
+#define MAX_CBS 10
 
 #define CMD_BASE 0x02
 #define SCB_POINTER_BASE 0x04
@@ -279,11 +279,13 @@ void e100_remove(struct pci_dev *dev)
 	struct net_device *net_dev = pci_get_drvdata(dev);
 	struct e100_data *data = netdev_priv(net_dev);
 
-	free_cbl(data->tx_cbl, dev);
-	free_cbl(data->rx_cbl, dev);
+	if (net_dev) {
+		free_cbl(data->tx_cbl, dev);
+		free_cbl(data->rx_cbl, dev);
 
-	unregister_netdev(net_dev);
-	free_netdev(net_dev);
+		unregister_netdev(net_dev);
+		free_netdev(net_dev);
+	}
 }
 
 struct pci_device_id e100_id_table[] = {
@@ -305,7 +307,7 @@ struct pci_driver e100_driver = {
 
 static int e100_init(void)
 {
-	//int ret = pci_register_driver(&e100_driver);
+	int ret = pci_register_driver(&e100_driver);
 
 	printk(LOG_LEVEL "%d\n", ret);
 
@@ -314,7 +316,7 @@ static int e100_init(void)
 
 static void e100_exit(void)
 {
-	//pci_unregister_driver(&e100_driver);
+	pci_unregister_driver(&e100_driver);
 }
 
 module_init(e100_init);
